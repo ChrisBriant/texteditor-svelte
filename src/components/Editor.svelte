@@ -2,8 +2,8 @@
     import { onDestroy } from "svelte";
     import { textStoreActions } from '../store/textstore';
 
-    let inputText = '';
-    let formattedText = '';
+    let inputText = 'Hello here is some textHere is a header';
+    let formattedText = `<p>Hello here is some text</p><h1>Here is a header</h1>`;
     let mode = 'plain';
     let currentTag = '<p>';
     let startedParagraph = false;
@@ -26,41 +26,71 @@
         }
     }
 
+    const totalStrings = (strArray) => {
+        let total = 0;
+        strArray.forEach(element => {
+            total += element.length;
+        });
+        return total;
+    } 
+
+    const getPosWithoutTags = (plainText,taggedText,pos) => {
+        let newPos = pos;
+        const matches = taggedText.match(/<(?<=).(?=)[\w]*>/gm);
+        let removedTags = [];
+        let compareString = taggedText;
+        //let compareString = formattedText;
+        //const targetText = inputText.substring(0,pos);
+        //console.log('GET START POS', matches,targetText,compareString);
+        //console.log(compareString.startsWith(targetText));
+        for(let i=0;i<matches.length;i++) {
+            if(compareString.startsWith(plainText)) {
+                break;
+            }
+            const removeTagSt = compareString.indexOf(matches[i]);
+            removedTags.push(matches[i]);
+            const firstHalfOfString = compareString.substring(0,removeTagSt);
+            const endHalfOfString = compareString.substring(removeTagSt + matches[i].length, compareString.length);
+            compareString = firstHalfOfString + endHalfOfString;
+            //compareString = compareString.substring(0,removeTagSt) + compareString.substring(removeTagSt.length, compareString.length);
+        }
+        newPos += totalStrings(removedTags);
+        //console.log('COMPARE STRING', compareString, removedTags,pos, newPos);
+        return newPos;
+    }
+
     const handleTyping = (e) => {
         console.log(e.key);
+        if(e.key === 'Delete') {
+            e.preventDefault();
+            console.log(e.target.selectionStart, e.target.selectionEnd);
+            const endOfFirstHalf =  getPosWithoutTags(inputText.substring(0,e.target.selectionStart),formattedText,e.target.selectionStart);
+            const firstHalf = formattedText.substring(0,endOfFirstHalf);
+            const middleToEnd = formattedText.substring(firstHalf.length,formattedText.length);
+            const inputStrMiddle = inputText.substring(e.target.selectionStart, e.target.selectionEnd);
+            const endOfMiddle =  getPosWithoutTags(inputStrMiddle,middleToEnd,e.target.selectionEnd -e.target.selectionStart );
+            const endHalf = formattedText.substring(firstHalf.length + endOfMiddle,formattedText.length);
+            //const endHalf = formattedText.substring(firstHalf.length + (middle.length - 1),formattedText.length);
+            console.log('STRINGS');
+            console.log('firsthalf',firstHalf);
+            console.log('end half', endHalf);
+            console.log('Middle of Input', inputStrMiddle);
+            console.log('Middle to End', middleToEnd, endOfMiddle);
+        }
+
         if(e.key === 'Backspace') {
-            //if(formattedText === '') {return;}
-            // const lastChar = formattedText[formattedText.length-1];
-            // if(lastChar !== '>') {
-            //     formattedText = formattedText.substring(0, formattedText.length - 1);
-            // } else {
-                const match = formattedText.match(/<\/?[\w]*>$/gm)
-                if(match) {
-                    const endTag = match[0];
-                    formattedText = formattedText.substring(0,formattedText.length-endTag.length);
-                    if(endTag.includes('/')) {
-                        startedParagraph = true;
-                    } else {
-                        startedParagraph = false;
-                    }
+            const match = formattedText.match(/<\/?[\w]*>$/g);
+            if(match) {
+                const endTag = match[0];
+                formattedText = formattedText.substring(0,formattedText.length-endTag.length);
+                if(endTag.includes('/')) {
+                    startedParagraph = true;
                 } else {
-                    formattedText = formattedText.substring(0, formattedText.length - 1);
+                    startedParagraph = false;
                 }
-                // const matches = formattedText.match(/(?<=<).*?(?=>)/gm);
-                // const noCharsToRemove = matches[matches.length -1].length + 2;
-                // formattedText = formattedText.substring(0, formattedText.length - noCharsToRemove);
-                // console.log('MATCHES', matches[matches.length -1]);
-                // //Check start tag and set to started typing    
-                // if(!matches[matches.length -1].match('/')) {
-                //     startedParagraph = true;
-                // }
-                // //Check not closing tag in remaining string
-                // const newLastChar = formattedText[formattedText.length-1];
-                // if(newLastChar === '>') {
-                //     console.log('LAST TAG', formattedText.match(/<\/[\w]*>$/gm))
-                //     startedParagraph = false;
-                // } 
-            //}
+            } else {
+                formattedText = formattedText.substring(0, formattedText.length - 1);
+            }
             return;
         }
 
