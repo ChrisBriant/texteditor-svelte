@@ -12,5 +12,5 @@
 </style>
 
 <div class="target-text">
-    <pre>{$textStoreActions.formattedText}</pre>
+    {@html $textStoreActions.formattedText}
 </div>

@@ -1,6 +1,7 @@
 <script>
 	import Editor from "./components/Editor.svelte";
 	import DisplayUnformatted from "./components/DisplayUnformatted.svelte";
+	import HTMLDisplay from "./components/HTMLDisplay.svelte";
 
 	export let name;
 </script>
@@ -38,6 +39,7 @@
 		<div class="components-container">
 			<Editor />
 			<DisplayUnformatted />
+			<HTMLDisplay />
 		</div>
 	</section>
 </main>

@@ -20,29 +20,47 @@
     $: textStoreActions.setFormattedText(formattedText);
     // $: console.log('STORE', $textStoreActions);
 
+    const appendAlphaNumericCharacter = (char) => {
+        if(char.length === 1 && char.match(/[A-Z,a-z,0-9,!,",£,$,%,&,\*," "]/)) {
+            formattedText += char;
+        }
+    }
+
     const handleTyping = (e) => {
         console.log(e.key);
         if(e.key === 'Backspace') {
             //if(formattedText === '') {return;}
-            const lastChar = formattedText[formattedText.length-1];
-            if(lastChar !== '>') {
-                formattedText = formattedText.substring(0, formattedText.length - 1);
-            } else {
-                const matches = formattedText.match(/(?<=<).*?(?=>)/gm);
-                const noCharsToRemove = matches[matches.length -1].length + 2;
-                formattedText = formattedText.substring(0, formattedText.length - noCharsToRemove);
-                console.log('MATCHES', matches[matches.length -1]);
-                //Check start tag and set to started typing    
-                if(!matches[matches.length -1].match('/')) {
-                    startedParagraph = true;
+            // const lastChar = formattedText[formattedText.length-1];
+            // if(lastChar !== '>') {
+            //     formattedText = formattedText.substring(0, formattedText.length - 1);
+            // } else {
+                const match = formattedText.match(/<\/?[\w]*>$/gm)
+                if(match) {
+                    const endTag = match[0];
+                    formattedText = formattedText.substring(0,formattedText.length-endTag.length);
+                    if(endTag.includes('/')) {
+                        startedParagraph = true;
+                    } else {
+                        startedParagraph = false;
+                    }
+                } else {
+                    formattedText = formattedText.substring(0, formattedText.length - 1);
                 }
-                //Check not closing tag in remaining string
-                const newLastChar = formattedText[formattedText.length-1];
-                if(newLastChar === '>') {
-                    console.log('LAST TAG', formattedText.match(/<\/[\w]*>$/gm))
-                    startedParagraph = false;
-                } 
-            }
+                // const matches = formattedText.match(/(?<=<).*?(?=>)/gm);
+                // const noCharsToRemove = matches[matches.length -1].length + 2;
+                // formattedText = formattedText.substring(0, formattedText.length - noCharsToRemove);
+                // console.log('MATCHES', matches[matches.length -1]);
+                // //Check start tag and set to started typing    
+                // if(!matches[matches.length -1].match('/')) {
+                //     startedParagraph = true;
+                // }
+                // //Check not closing tag in remaining string
+                // const newLastChar = formattedText[formattedText.length-1];
+                // if(newLastChar === '>') {
+                //     console.log('LAST TAG', formattedText.match(/<\/[\w]*>$/gm))
+                //     startedParagraph = false;
+                // } 
+            //}
             return;
         }
 
@@ -60,9 +78,7 @@
             startedParagraph = false;
         }
         //Check alpha numeric
-        if(e.key.length === 1 && e.key.match(/[A-Z,a-z,0-9,!,",£,$,%,&,\*," "]/)) {
-            formattedText += e.key;
-        }
+        appendAlphaNumericCharacter(e.key); 
         // switch (mode) {
         //     case 'plain':
         //         currentTag = 'p';
